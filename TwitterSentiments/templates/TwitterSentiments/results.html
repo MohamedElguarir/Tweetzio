@@ -1,0 +1,146 @@
+
+{% load static%}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <!-- tweets analys -->
+    {% if context %}
+    <title>Tweets Analysis – {{query}}</title>
+    {% else %}
+    <title>Analyse Tweets – Tweetzio</title>
+    {% endif %}
+    <link rel="icon" type="image/png" sizes="131x131" href="{% static 'favicon/img/favicon.png' %}">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/MohamedElguarir/web-project-01/main/assets/favicon.png">
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins&amp;display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/Login-Form-Basic-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Timeline-Steps.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Tweets.css' %}">
+    <link href="https://fonts.cdnfonts.com/css/ranade" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Start: Navbar -->
+    {% include 'TwitterSentiments/navbar.html' %}
+    <!-- End: Navbar -->
+    <!-- Start: Tweets Section -->
+    <div class="container py-4 py-xl-5" style="margin-bottom: 33px;">
+        <!-- Start: Latest Tweets Heading -->
+        <div class="row mb-5">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h1 class="display-5 fw-normal" style="font-family: Poppins, sans-serif;font-weight: bold;text-align: center;">Latest Tweets</h1>
+                <p>Explore the most recent tweets and their sentiment analysis on Tweetzio.</p>
+            </div>
+        </div><!-- End: Latest Tweets Heading -->
+        <!-- Start: Tweets row -->
+
+        <div class="row gy-4 row-cols-1 row-cols-md-2 row-cols-xl-3 justify-content-center order-last" style="padding-left: 8px;padding-right: 8px;">
+            {% for tweet in tweets %}
+
+
+            <div class="col tweet-card" style="background: var(--bs-gray-100);margin-right: 14px;margin-left: 14px;margin-top: 24px;width: 375px;border-radius: 12px;">
+                <div class="p-4" style="position: relative;">
+                    <div class="d-flex" style="position: relative;width: 293px;"><img class="rounded-circle flex-shrink-0 me-3 fit-cover" width="50" height="50" src="{{ tweet.user_profile_image_url }}">
+                        <div>
+                            <!-- Start: ScreenName -->
+                            <p class="fw-bold mb-0">{{tweet.ScreenName}}</p><!-- End: ScreenName -->
+                            <!-- Start: username -->
+                            <p class="text-muted mb-0">@{{ tweet.username}}</p><!-- End: username -->
+                        </div>
+                        <span class="badge rounded-pill bg-primary float-end align-self-baseline ms-auto mb-2" style="position: static;">
+                            {{tweet.date_diff}}
+                        </span>
+
+                       
+                    </div>
+                    <p class="text-start d-md-flex" style="margin-top: 12px;">{{ tweet.tweet_text }}</p>
+                    <div class="d-flex justify-content-between align-items-start">
+                        
+                        {% if tweet.sentiment == "Positive" %}
+                        <h6 class="polarity"><strong>Polarity : </strong></h6><span class="badge" style="border-radius: 6px;background: green;">Positive ({{ tweet.confidence }})</span>
+                        {% elif tweet.sentiment == "Negative" %}
+                        <h6 class="polarity"><strong>Polarity : </strong></h6><span class="badge" style="border-radius: 6px;background: red;">Negative ({{ tweet.confidence }})</span>
+                        {% else %}
+                        <h6 class="polarity"><strong>Polarity : </strong></h6><span class="badge" style="border-radius: 6px;background: orange;">Neutral ({{ tweet.confidence }})</span>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+
+
+            {% endfor %}
+
+            
+        </div><!-- End: Tweets row -->
+        <hr class="mx-20">
+
+        <!-- Start: Contextual Summary -->
+        <div class="row mb-5">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h1 class="display-5 fw-normal" style="font-family: Poppins, sans-serif;font-weight: bold;text-align: center;">Tweets's Context</h1>
+                <p>Gain a deeper understanding of public opinion by analyzing the context of tweets with Tweetzio.</p>
+                <p class="fw-normal text-start" style="margin-top: 1.8rem;"> {{ contextsummary }}</p>
+            </div>
+        </div><!-- End: Contextual Summary -->
+        <hr class="mx-3">
+        
+        <!-- Start: Overall stats -->
+        <div class="row mb-5" style="margin-top: 86px;">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h1 class="display-5 fw-normal" style="font-family: Poppins, sans-serif;font-weight: bold;text-align: center;">Overall Stats</h1>
+                <p style="margin-bottom: 2.5rem;">Get a comprehensive view of the sentiment analysis of the latest tweets on Tweetzio with our intuitive graphical representation.</p>
+            <!-- graph -->
+            <canvas id="myChart" style="width:80%;max-width:700px;"></canvas>
+                <!--chart JS pie chart-->
+            <script>
+            var ctx = document.getElementById('myChart');
+            //<!-- getContext means      -->
+            var myChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                labels: [
+                    'Negative',
+                    'Postive',
+                    'Neutral'
+                ],
+                datasets: [{
+                    label: 'Number of tweets',
+                    data: [{{ negative_tweets }}, {{positive_tweets}}, {{neutral_tweets}}],
+                    backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'green',
+                    'rgb(255, 205, 86)'
+                    ],
+                    hoverOffset: 4
+                }]
+                },
+                options: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'Number of tweets by sentiment.'
+                }
+                }
+            });
+        </script>
+            </div>
+        </div><!-- End: Overall stats -->
+    </div><!-- End: Tweets Section -->
+    <!-- Start: Footer -->
+    {% include 'TwitterSentiments/footer.html' %}
+    <!-- End: Footer -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/bs-init.js' %}"></script>
+    <script src="{% static 'js/bold-and-bright.js' %}"></script>
+</body>
+
+</html>
